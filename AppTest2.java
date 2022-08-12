@@ -137,7 +137,7 @@ public class AppTest2 {
     public static class Graphic extends JPanel {
 
         public Graphic() {
-            String frameName = "Тестовое задание";
+            String frameName = "Анализ Math.random()";
             String graphicName = "y = F(x)";
             String densityName = "y = F'(x) = f(x)";
             final double scale = 1000;
