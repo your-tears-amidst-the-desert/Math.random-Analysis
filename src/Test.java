@@ -19,12 +19,13 @@ import java.util.List;
 
 public class TEST {
     static String funcName = "График функции";
-    static String frameName = "Тестовое задание";
+    static String frameName = "Анализ Math.random()";
     static String graphicName = "y = F(x)";
     static XYSeries series1 = new XYSeries(funcName);
     static XYSeries series2 = new XYSeries(funcName);
     static String densityName = "Отсортированная последовательность СВ";
 
+    //округление до нужного знака
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
 
@@ -32,10 +33,6 @@ public class TEST {
         value = value * factor;
         long tmp = Math.round(value);
         return (double) tmp / factor;
-    }
-
-    public static ArrayList<Double> zadanie(double akf) {
-        return zadanie(1);
     }
 
     public static void main(String[] args) {
@@ -47,6 +44,7 @@ public class TEST {
         double Dx = 0.0;
         double Mx = 0.0;
 
+        //генерируем последовательность
         ArrayList<Double> counts = new ArrayList<>();
         double x;
         double y;
@@ -56,6 +54,7 @@ public class TEST {
             counts.add(x);
         }
 
+        //вычисляем центрированную корреляционную функцию
         double sum = 0;
         double R = ((double) 1 / range);
         ArrayList<Double> r = new ArrayList<>();
@@ -70,6 +69,7 @@ public class TEST {
         ArrayList<Double> countsSorted = new ArrayList<>(counts);
         Collections.sort(countsSorted);
 
+        //вычисляем мат. ожидание и дисперсию СВ
         ArrayList<Integer> density = new ArrayList<>();
         List<Double> chance = new ArrayList<>();
         double mx = 0;
@@ -118,6 +118,7 @@ public class TEST {
             series2.add(i, countsSorted.get((int)(i * scale)));
         }
 
+        //создаём фрэйм и запихиваем в него графики
         XYDataset xyDataset1 = new XYSeriesCollection(series1);
         XYDataset xyDataset2 = new XYSeriesCollection(series2);
         JFreeChart chart1 = ChartFactory.createXYLineChart(graphicName, "x", "y", xyDataset1, PlotOrientation.VERTICAL, true, true, true);
@@ -131,7 +132,8 @@ public class TEST {
         frame.setLocation(360, 240);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
+    
+        //считаем время работы программы
         stop = System.currentTimeMillis();
         totalTime = (stop-start) / 1000.0;
         System.out.println("Всего прошло " + totalTime + " секунды.");
