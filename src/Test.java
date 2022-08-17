@@ -49,10 +49,8 @@ public class TEST {
         //генерируем последовательность
         ArrayList<Double> counts = new ArrayList<>();
         double x;
-        double y;
         for(int i = 0; i < scale; i++) {
             x = Math.random();
-            y = Math.pow(1-x, Math.sin(Math.E - x)) * i / 1;
             counts.add(x);
         }
 
