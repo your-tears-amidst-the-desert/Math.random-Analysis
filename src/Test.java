@@ -27,7 +27,7 @@ public class TEST {
     static XYSeries series2 = new XYSeries(funcName);
     static String densityName = "Отсортированная последовательность СВ";
 
-    //округление до нужного знака
+    //округление до нужного разряда
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
 
