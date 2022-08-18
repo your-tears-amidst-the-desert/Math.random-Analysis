@@ -62,6 +62,7 @@ public class Analysis {
         return R;
     }
 
+    //вычисление мат. ожидания
     public static Double Mx(List<Double> countsSorted, int scale, List<Double> counts) {
         double Mx = 0;
         List<Double> chance = new ArrayList<>();
@@ -84,6 +85,7 @@ public class Analysis {
         return Mx;
     }
 
+    //вычисление дисперсии
     public static Double Dx(List<Double> countsSorted, int scale, List<Double> counts) {
         double Mx = 0;
         double Dx = 0;
