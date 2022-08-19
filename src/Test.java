@@ -21,7 +21,7 @@ import java.util.List;
 
 public class Analysis {
     static String funcName = "График функции";
-    static String frameName = "Анализ Math.random()";
+    static String frameName = "Графическое представление";
     static String graphicName = "y = F(x)";
     static XYSeries series1 = new XYSeries(funcName);
     static XYSeries series2 = new XYSeries(funcName);
@@ -37,8 +37,9 @@ public class Analysis {
     static double Dx = 0.0;
 
     //округление до нужного разряда
-    public static double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
+    public static double Round(double value, int places) {
+        if(places < 0) throw new IllegalArgumentException();
+
         long factor = (long) Math.pow(10, places);
         value = value * factor;
         long tmp = Math.round(value);
@@ -49,6 +50,7 @@ public class Analysis {
     public static List<Double> Generate() {
         ArrayList<Double> counts = new ArrayList<>();
         double x;
+        
         for(double i = 0; i < 1; i += 0.001) {
             x = Math.random();
             counts.add(x);
@@ -58,12 +60,19 @@ public class Analysis {
 
     //вычисление центрированной корреляционной функции
     public static Double R(int range, List<Double> counts, int shift) {
+        countsSorted = new ArrayList<>(counts);
+        Collections.sort(countsSorted);
+
+        double Mx = Mx(countsSorted, scale, counts);
+
         double sum = 0;
         double R = ((double) 1 / range);
+
         ArrayList<Double> r = new ArrayList<>();
         double cur;
-        for (int j = 0; j < counts.size() - shift; j++) {
-            cur = ((counts.get(j) - 0.5) * (counts.get(j + shift) - 0.5));
+        for(int j = 0; j < counts.size() - shift; j++) {
+            //здесь нужно поменять на точное значение Mx, для центрирования!
+            cur = ((counts.get(j) - Mx) * (counts.get(j + shift) - Mx));
             r.add(cur);
             sum += r.get(j);
         }
@@ -74,20 +83,23 @@ public class Analysis {
     //вычислние мат.ожидания
     public static Double Mx(List<Double> countsSorted, int scale, List<Double> counts) {
         double Mx = 0;
+        double mx;
         List<Double> chance = new ArrayList<>();
-        double mx = 0;
+
         for(double i = 0; i < (double)(countsSorted.size() / scale); i += 0.001) {
             int count = 0;
+
             for(int j = 0; j < scale - 1; j++) {
-                if (round(countsSorted.get((int)(i * scale)), 7) == round(countsSorted.get(j+1), 7)) {
+                if(Round(countsSorted.get((int)(i * scale)), 7) == Round(countsSorted.get(j+1), 7)) {
                     count++;
                 }
             }
             chance.add( (double)count / scale );
+
             try {
                 mx = counts.get((int)(i * scale)) * chance.get((int)(i * scale));
                 Mx += mx;
-            } catch (ArithmeticException e) {
+            } catch(ArithmeticException e) {
                 System.out.println("Ошибка!");
             }
         }
@@ -96,31 +108,29 @@ public class Analysis {
 
     //вычисление дисперсии
     public static Double Dx(List<Double> countsSorted, int scale, List<Double> counts) {
-        double Mx = 0;
+        double Mx = Mx(countsSorted, scale, counts);
         double Dx = 0;
-        ArrayList<Integer> density = new ArrayList<>();
+        double dx;
+        //ArrayList<Integer> density = new ArrayList<>();
         List<Double> chance = new ArrayList<>();
-        double mx = 0;
-        double dx = 0;
+
         for(double i = 0; i < (double)(countsSorted.size() / scale); i += 0.001) {
             int count = 0;
+
             for(int j = 0; j < scale - 1; j++) {
-                if (round(countsSorted.get((int)(i * scale)), 7) == round(countsSorted.get(j+1), 7)) {
+                if(Round(countsSorted.get((int)(i * scale)), 7) == Round(countsSorted.get(j+1), 7)) {
                     count++;
                 }
             }
             chance.add( (double)count / scale );
+
             try {
-                mx = counts.get((int)(i * scale)) * chance.get((int)(i * scale));
-                if (mx != 0) {
-                    dx = Math.pow(countsSorted.get((int)(i * scale)) - 0.5, 2) * chance.get((int)(i * scale));
-                }
-                Mx += mx;
+                dx = Math.pow(countsSorted.get((int)(i * scale)) - Mx, 2) * chance.get((int)(i * scale));
                 Dx += dx;
-            } catch (ArithmeticException e) {
+            } catch(ArithmeticException e) {
                 System.out.println("Ошибка!");
             }
-            density.add(count);
+            //density.add(count);
         }
         return Dx;
     }
@@ -130,7 +140,7 @@ public class Analysis {
         @Override
         public void run() {
             //добавление значений x и y
-            for (double i = 0; i < 1; i += 0.001) {
+            for(double i = 0; i < 1; i += 0.001) {
                 series1.add(i, counts.get((int) (i * scale)));
                 //series2.add(i, density.get((int)(i * scale))); количество попаданий в конкретную точку
                 series2.add(i, countsSorted.get((int) (i * scale)));
@@ -188,10 +198,10 @@ public class Analysis {
         double normalizedR = R / Dx;
         System.out.println("Нормированная корреляционная функция(автокорреляционная ф.) = " + normalizedR + ";");
 
-        if (-0.1 < normalizedR && normalizedR < 0.1) {
-            System.out.println('\n' + "Итог: ХОРОШИЙ ДПСЧ( < |0.1| );" + '\n');
+        if(-0.1 < normalizedR && normalizedR < 0.1) {
+            System.out.printf("\nИтог: ХОРОШИЙ ДПСЧ( < |0.1| );\n%n");
         } else {
-            System.out.println('\n' + "Итог: ПЛОХОЙ ДПСЧ( > |0.1| );" + '\n');
+            System.out.printf("\nИтог: ПЛОХОЙ ДПСЧ( > |0.1| );\n%n");
         }
 
         //считаем время работы программы
