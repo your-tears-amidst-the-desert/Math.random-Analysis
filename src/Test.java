@@ -49,15 +49,9 @@ public class Analysis {
     public static List<Double> Generate() {
         ArrayList<Double> counts = new ArrayList<>();
         double x;
-        double y;
         for(double i = 0; i < 1; i += 0.001) {
             x = Math.random();
-
-            y = y = Math.pow(1 - x, Math.sin(x * Math.PI / 2));
-            //y = Math.pow(1 - x, Math.sin(x * Math.PI / 2)) * Math.pow(x, i * 100); //хороший ДПСЧ
-            counts.add(y);
-
-            //counts.add(x);
+            counts.add(x);
         }
         return counts;
     }
