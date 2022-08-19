@@ -71,7 +71,6 @@ public class Analysis {
         ArrayList<Double> r = new ArrayList<>();
         double cur;
         for(int j = 0; j < counts.size() - shift; j++) {
-            //здесь нужно поменять на точное значение Mx, для центрирования!
             cur = ((counts.get(j) - Mx) * (counts.get(j + shift) - Mx));
             r.add(cur);
             sum += r.get(j);
