@@ -27,6 +27,15 @@ public class Analysis {
     static XYSeries series2 = new XYSeries(funcName);
     static String densityName = "Отсортированная последовательность СВ";
 
+    static List<Double> counts = new ArrayList<>();
+    static ArrayList<Double> countsSorted = new ArrayList<>();
+    //размер выборки
+    static final int scale = 1000;
+    //мат. ожидание
+    static double Mx = 0.0;
+    //дисперсия
+    static double Dx = 0.0;
+
     //округление до нужного разряда
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
@@ -37,12 +46,18 @@ public class Analysis {
     }
 
     //генерация последовательности
-    public static List<Double> Generate(int scale) {
+    public static List<Double> Generate() {
         ArrayList<Double> counts = new ArrayList<>();
         double x;
-        for(int i = 0; i < scale; i++) {
+        double y;
+        for(double i = 0; i < 1; i += 0.001) {
             x = Math.random();
-            counts.add(x);
+
+            y = y = Math.pow(1 - x, Math.sin(x * Math.PI / 2));
+            //y = Math.pow(1 - x, Math.sin(x * Math.PI / 2)) * Math.pow(x, i * 100); //хороший ДПСЧ
+            counts.add(y);
+
+            //counts.add(x);
         }
         return counts;
     }
@@ -62,7 +77,7 @@ public class Analysis {
         return R;
     }
 
-    //вычисление мат. ожидания
+    //вычислние мат.ожидания
     public static Double Mx(List<Double> countsSorted, int scale, List<Double> counts) {
         double Mx = 0;
         List<Double> chance = new ArrayList<>();
@@ -116,57 +131,58 @@ public class Analysis {
         return Dx;
     }
 
-    //рисуем графики
-    public static void Graphic(List<Double> counts, int scale, List<Double> countsSorted) {
-        //добавление значений x и y
-        for (double i = 0; i < 1; i += 0.001) {
-            series1.add(i, counts.get((int)(i*scale)));
-            //series2.add(i, density.get((int)(i * scale))); количество попаданий в конкретную точку
-            series2.add(i, countsSorted.get((int)(i * scale)));
+    //поток для рисования графиков
+    public static class myGraphic extends Thread {
+        @Override
+        public void run() {
+            //добавление значений x и y
+            for (double i = 0; i < 1; i += 0.001) {
+                series1.add(i, counts.get((int) (i * scale)));
+                //series2.add(i, density.get((int)(i * scale))); количество попаданий в конкретную точку
+                series2.add(i, countsSorted.get((int) (i * scale)));
+            }
+
+            XYDataset xyDataset1 = new XYSeriesCollection(series1);
+            XYDataset xyDataset2 = new XYSeriesCollection(series2);
+            JFreeChart chart1 = ChartFactory.createXYLineChart(graphicName, "x", "y", xyDataset1, PlotOrientation.VERTICAL, true, true, true);
+            JFreeChart chart2 = ChartFactory.createXYLineChart(densityName, "x", "y", xyDataset2, PlotOrientation.VERTICAL, true, true, true);
+
+            //создание фрэйма и добавление в него графиков
+            JFrame frame = new JFrame(frameName);
+            frame.getContentPane().add(new ChartPanel(chart1));
+            frame.getContentPane().add(new ChartPanel(chart2));
+            frame.setLayout(new GridLayout());
+            frame.setSize(1200, 600);
+            frame.setLocation(360, 240);
+            frame.setVisible(true);
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         }
-
-        XYDataset xyDataset1 = new XYSeriesCollection(series1);
-        XYDataset xyDataset2 = new XYSeriesCollection(series2);
-        JFreeChart chart1 = ChartFactory.createXYLineChart(graphicName, "x", "y", xyDataset1, PlotOrientation.VERTICAL, true, true, true);
-        JFreeChart chart2 = ChartFactory.createXYLineChart(densityName, "x", "y", xyDataset2, PlotOrientation.VERTICAL, true, true, true);
-
-        //создание фрэйма и добавление в него графиков
-        JFrame frame = new JFrame(frameName);
-        frame.getContentPane().add(new ChartPanel(chart1));
-        frame.getContentPane().add(new ChartPanel(chart2));
-        frame.setLayout(new GridLayout());
-        frame.setSize(1200, 600);
-        frame.setLocation(360, 240);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }
 
     public static void main(String[] args) {
         double start, stop, totalTime;
         start = System.currentTimeMillis();
-        //размер выборки
-        final int scale = 1000;
         //шаг
         final int shift = 7;
         final int range = scale - shift;
-        //дисперсия
-        double Dx = 0.0;
-        //мат. ожидание
-        double Mx = 0.0;
 
         //отсчёты
-        List<Double> counts = Generate(scale);
+        counts = Generate();
 
         //центрированная корреляционная функция
         double R = R(range, counts, shift);
 
         //создаём массив отсортированных отсчётов
-        ArrayList<Double> countsSorted = new ArrayList<>(counts);
+        countsSorted = new ArrayList<>(counts);
         Collections.sort(countsSorted);
 
+        //рисуем графики в отдельном потоке(значительно сокращает время работы программы)
+        myGraphic mG = new myGraphic();
+        mG.start();
+
         //математическое ожидание и дисперсия выборки
-        Mx = Mx(countsSorted, scale, counts);
-        Dx = Dx(countsSorted, scale, counts);
+        Mx = Mx(countsSorted, scale, countsSorted);
+        Dx = Dx(countsSorted, scale, countsSorted);
 
         //принтуем итоги
         System.out.println("Всего элементов = " + scale);
@@ -183,9 +199,6 @@ public class Analysis {
         } else {
             System.out.println('\n' + "Итог: ПЛОХОЙ ДПСЧ( > |0.1| );" + '\n');
         }
-
-        //рисуем графики
-        Graphic(counts, scale, countsSorted);
 
         //считаем время работы программы
         stop = System.currentTimeMillis();
