@@ -1,7 +1,7 @@
 //Как итог работы программы получаем весьма хорошие результаты для оценки качества работы Math.random().
 //Значения автокорреляционной функции всегда значительно < |0.1|, лишь изредка приближаясь к пороговому значению, 
-//мат. ожидание же в худшем случае колеблется в пределах +-0.018 от ожидаемого, в среднем +-0.008(строго говоря, это зависит от степени округления отсчётов,
-//где опытным путём наиболее точные показатели были получены для степени округления равной 7му разряду.
+//мат. ожидание же в худшем случае колеблется в пределах +-0.018 от ожидаемого, в среднем +-0.008, дисперсия - в пределах +-0.003, в среднем меньше.
+//Строго говоря, это зависит от степени округления отсчётов, где опытным путём наиболее точные показатели были получены для степени округления равной 7му разряду.
 //На основании данных наблюдений, реализацию метода Math.random() можно счесть положительной.
 //Условие для проверки качества ДПСЧ было взято с сайта - https://intuit.ru/studies/courses/623/479/lecture/21088?page=3 
 
@@ -50,7 +50,6 @@ public class Analysis {
     public static List<Double> Generate() {
         ArrayList<Double> counts = new ArrayList<>();
         double x;
-        
         for(double i = 0; i < 1; i += 0.001) {
             x = Math.random();
             counts.add(x);
@@ -58,29 +57,8 @@ public class Analysis {
         return counts;
     }
 
-    //вычисление центрированной корреляционной функции
-    public static Double R(int range, List<Double> counts, int shift) {
-        countsSorted = new ArrayList<>(counts);
-        Collections.sort(countsSorted);
-
-        double Mx = Mx(countsSorted, scale, counts);
-
-        double sum = 0;
-        double R = ((double) 1 / range);
-
-        ArrayList<Double> r = new ArrayList<>();
-        double cur;
-        for(int j = 0; j < counts.size() - shift; j++) {
-            cur = ((counts.get(j) - Mx) * (counts.get(j + shift) - Mx));
-            r.add(cur);
-            sum += r.get(j);
-        }
-        R *= sum;
-        return R;
-    }
-
     //вычислние мат.ожидания
-    public static Double Mx(List<Double> countsSorted, int scale, List<Double> counts) {
+    public static Double calculusMx(List<Double> countsSorted, int scale, List<Double> counts) {
         double Mx = 0;
         double mx;
         List<Double> chance = new ArrayList<>();
@@ -106,8 +84,8 @@ public class Analysis {
     }
 
     //вычисление дисперсии
-    public static Double Dx(List<Double> countsSorted, int scale, List<Double> counts) {
-        double Mx = Mx(countsSorted, scale, counts);
+    public static Double calculusDx(List<Double> countsSorted, int scale, List<Double> counts) {
+        double Mx = calculusMx(countsSorted, scale, counts);
         double Dx = 0;
         double dx;
         //ArrayList<Integer> density = new ArrayList<>();
@@ -132,6 +110,27 @@ public class Analysis {
             //density.add(count);
         }
         return Dx;
+    }
+
+    //вычисление центрированной корреляционной функции
+    public static Double calculusR(int range, List<Double> counts, int shift) {
+        countsSorted = new ArrayList<>(counts);
+        Collections.sort(countsSorted);
+
+        double Mx = calculusMx(countsSorted, scale, counts);
+
+        double sum = 0;
+        double R = ((double) 1 / range);
+
+        ArrayList<Double> r = new ArrayList<>();
+        double cur;
+        for(int j = 0; j < counts.size() - shift; j++) {
+            cur = ((counts.get(j) - Mx) * (counts.get(j + shift) - Mx));
+            r.add(cur);
+            sum += r.get(j);
+        }
+        R *= sum;
+        return R;
     }
 
     //поток для рисования графиков
@@ -173,7 +172,7 @@ public class Analysis {
         counts = Generate();
 
         //центрированная корреляционная функция
-        double R = R(range, counts, shift);
+        double R = calculusR(range, counts, shift);
 
         //создаём массив отсортированных отсчётов
         countsSorted = new ArrayList<>(counts);
@@ -184,8 +183,8 @@ public class Analysis {
         mG.start();
 
         //математическое ожидание и дисперсия выборки
-        Mx = Mx(countsSorted, scale, countsSorted);
-        Dx = Dx(countsSorted, scale, countsSorted);
+        Mx = calculusMx(countsSorted, scale, countsSorted);
+        Dx = calculusDx(countsSorted, scale, countsSorted);
 
         //принтуем итоги
         System.out.println("Всего элементов = " + scale);
